@@ -1,17 +1,19 @@
 $script:roles = @{}
 
-function role($name, $servers, $username, $password) {
+function Set-CBRole($name, $servers, $username, $password) {
     $script:roles[$name] = @{ servers = $servers; username = $username; password = $password }
 }
+New-Alias Role Set-CBRole
 
-function run([array]$roles, [array]$argumentList, [scriptblock]$definition) {
+function Invoke-CBRun([array]$roles, [array]$argumentList, [scriptblock]$definition) {
     foreach ($role in UniqueServers($roles)) {
         $credential = New-object -typename System.Management.Automation.PSCredential($role.username, (ConvertTo-SecureString $role.password -AsPlainText –Force))
         Invoke-Command -ComputerName $role.server -Credential $credential $definition -UseSSL -SessionOption (New-PSSessionOption -SkipCACheck -SkipCNCheck) -ArgumentList $argumentList
     }
 }
+New-Alias Run Invoke-CBRun
 
-function put(
+function Invoke-CBPut(
     [string]$source = $(throws "A source directory to copy from is required"), 
     [string]$destination = $(throws "A destination directory to copy to is required"),
     $roles){
@@ -24,6 +26,7 @@ function put(
         Copy-Item "$source" -Destination "\\$($role.server)\$destination" -Recurse -Force
     }
 }
+New-Alias Put Invoke-CBPut
 
 function Exec-Safe([ScriptBlock]$command) {
 	#This will resolve ANY variable occurences in the script block, which could look weird
@@ -53,4 +56,5 @@ function UniqueServers($roles) {
     return $serversToReturn
 }
 
-Export-ModuleMember role, run, put
+Export-ModuleMember Set-CBRole, Invoke-CBRun, Invoke-CBPut
+Export-ModuleMember -alias Role, Run, Put
