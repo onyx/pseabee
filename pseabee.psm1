@@ -1,7 +1,6 @@
 $script:roles = @{}
 
 function role($name, $servers, $username, $password) {
-write-host "registered Role"
     $script:roles[$name] = @{ servers = $servers; username = $username; password = $password }
 }
 
@@ -18,7 +17,6 @@ function put(
     $roles){
     
     foreach ($role in UniqueServers($roles)) {
-	Write-host "role is: $role"
         Exec-Safe {net use "/User:$($role.username)" "\\$($role.server)" "$($role.password)"}
 	if (!(Test-Path "\\$($role.server)\$destination")) {
 		mkdir "\\$($role.server)\$destination"
